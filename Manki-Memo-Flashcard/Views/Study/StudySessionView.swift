@@ -27,143 +27,143 @@ struct StudySessionView: View {
     }
     
     var body: some View {
-        VStack {
-            // Header
-            HStack {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.title2)
-                        .foregroundColor(.primary)
+        ZStack {
+            AppTheme.Colors.background.ignoresSafeArea()
+            
+            VStack {
+                // Header
+                HStack {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.title2)
+                            .foregroundColor(AppTheme.Colors.primaryText)
+                    }
+                    
+                    Spacer()
+                    
+                    Text("\(currentIndex + 1) / \(cards.count)")
+                        .font(.headline)
+                        .foregroundStyle(AppTheme.Colors.secondaryText)
+                }
+                .padding()
+                
+                Spacer()
+                
+                if let card = currentCard {
+                    MujiCard(padding: 24) {
+                        VStack(spacing: 40) {
+                            // Japanese Text (Always visible)
+                            Text(card.japanese)
+                                .font(.system(size: 48, weight: .bold))
+                                .multilineTextAlignment(.center)
+                                .minimumScaleFactor(0.5)
+                                .foregroundColor(AppTheme.Colors.primaryText)
+                                .padding(.horizontal)
+                                .onTapGesture {
+                                     speechService.speak(card.japanese)
+                                }
+                            
+                            // Audio Button
+                            Button {
+                                speechService.speak(card.japanese)
+                            } label: {
+                                HStack {
+                                    Image(systemName: "speaker.wave.2.circle.fill")
+                                        .font(.largeTitle)
+                                    Text("發音")
+                                        .font(.headline)
+                                }
+                                .foregroundColor(AppTheme.Colors.accent)
+                            }
+                            .disabled(speechService.isSpeaking)
+                            
+                            Divider()
+                                .padding(.vertical)
+                                .frame(maxWidth: 200)
+                            
+                            // Translation (Hidden initially)
+                            Group {
+                                if isTranslationRevealed {
+                                    VStack(spacing: 8) {
+                                        if !translatedText.isEmpty {
+                                            Text(translatedText)
+                                                .font(.system(size: 32, weight: .medium))
+                                                .multilineTextAlignment(.center)
+                                                .foregroundStyle(AppTheme.Colors.primaryText)
+                                        } else {
+                                            // Fallback or loading
+                                            ProgressView()
+                                                .controlSize(.large)
+                                                .tint(AppTheme.Colors.accent)
+                                        }
+                                        
+                                        // Optional: Show original user translation as reference
+                                        Text("原文: \(card.translation)")
+                                            .font(.caption)
+                                            .foregroundStyle(AppTheme.Colors.secondaryText)
+                                            .padding(.top, 4)
+                                    }
+                                    .transition(.opacity.combined(with: .scale))
+                                } else {
+                                    Button {
+                                        withAnimation(.spring()) {
+                                            isTranslationRevealed = true
+                                        }
+                                    } label: {
+                                        VStack(spacing: 8) {
+                                            Image(systemName: "eye.fill")
+                                                .font(.title)
+                                            Text("顯示翻譯")
+                                                .font(.headline)
+                                        }
+                                        .padding(30)
+                                        .frame(maxWidth: .infinity)
+                                        .background(AppTheme.Colors.background)
+                                        .foregroundColor(AppTheme.Colors.secondaryText)
+                                        .overlay(
+                                            Rectangle()
+                                                .stroke(AppTheme.Colors.border, lineWidth: 1)
+                                        )
+                                    }
+                                }
+                            }
+                            .frame(minHeight: 120)
+                        }
+                    }
+                    .padding(.horizontal)
+                    
+                } else {
+                    VStack(spacing: 20) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 80))
+                            .foregroundStyle(AppTheme.Colors.accent)
+                        Text("學習完成！")
+                            .font(.largeTitle)
+                            .bold()
+                            .foregroundColor(AppTheme.Colors.primaryText)
+                    }
                 }
                 
                 Spacer()
                 
-                Text("\(currentIndex + 1) / \(cards.count)")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-            }
-            .padding()
-            
-            Spacer()
-            
-            if let card = currentCard {
-                VStack(spacing: 40) {
-                    // Japanese Text (Always visible)
-                    Text(card.japanese)
-                        .font(.system(size: 48, weight: .bold))
-                        .multilineTextAlignment(.center)
-                        .minimumScaleFactor(0.5)
-                        .padding(.horizontal)
-                        .onTapGesture {
-                             speechService.speak(card.japanese)
-                        }
-                    
-                    // Audio Button
-                    Button {
-                        speechService.speak(card.japanese)
-                    } label: {
-                        HStack {
-                            Image(systemName: "speaker.wave.2.circle.fill")
-                                .font(.largeTitle)
-                            Text("發音")
-                                .font(.headline)
-                        }
-                        .foregroundColor(.blue)
-                    }
-                    .disabled(speechService.isSpeaking)
-                    
-                    Divider()
-                        .padding(.vertical)
-                        .frame(maxWidth: 200)
-                    
-                    // Translation (Hidden initially)
-                    Group {
-                        if isTranslationRevealed {
-                            VStack(spacing: 8) {
-                                if !translatedText.isEmpty {
-                                    Text(translatedText)
-                                        .font(.system(size: 32, weight: .medium))
-                                        .multilineTextAlignment(.center)
-                                        .foregroundStyle(.primary)
-                                } else {
-                                    // Fallback or loading
-                                    ProgressView()
-                                        .controlSize(.large)
-                                }
-                                
-                                // Optional: Show original user translation as reference
-                                Text("原文: \(card.translation)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .padding(.top, 4)
-                            }
-                            .transition(.opacity.combined(with: .scale))
-                        } else {
-                            Button {
-                                withAnimation(.spring()) {
-                                    isTranslationRevealed = true
-                                }
-                            } label: {
-                                VStack(spacing: 8) {
-                                    Image(systemName: "eye.fill")
-                                        .font(.title)
-                                    Text("顯示翻譯")
-                                        .font(.headline)
-                                }
-                                .padding(30)
-                                .frame(maxWidth: .infinity)
-                                .background(Color(.secondarySystemBackground))
-                                .cornerRadius(16)
-                            }
+                // Footer
+                Button {
+                    nextCard()
+                } label: {
+                    HStack {
+                        Text(currentIndex < cards.count - 1 ? "下一個" : "完成")
+                            .bold()
+                        if currentIndex < cards.count - 1 {
+                            Image(systemName: "arrow.right")
                         }
                     }
-                    .frame(minHeight: 120)
                 }
+                .buttonStyle(MujiButtonStyle(isPrimary: true))
                 .padding()
-                .frame(maxWidth: .infinity)
-                .background(
-                    RoundedRectangle(cornerRadius: 24)
-                        .fill(Color(.systemBackground))
-                        .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-                )
-                .padding(.horizontal)
-                
-            } else {
-                VStack(spacing: 20) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 80))
-                        .foregroundStyle(.green)
-                    Text("學習完成！")
-                        .font(.largeTitle)
-                        .bold()
-                }
             }
-            
-            Spacer()
-            
-            // Footer
-            Button {
-                nextCard()
-            } label: {
-                HStack {
-                    Text(currentIndex < cards.count - 1 ? "下一個" : "完成")
-                        .bold()
-                    if currentIndex < cards.count - 1 {
-                        Image(systemName: "arrow.right")
-                    }
-                }
-                .font(.title3)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(16)
-            }
-            .padding()
         }
-        .background(Color(.systemGroupedBackground))
         .translationTask(translationConfig) { session in
             guard let card = currentCard else { return }
             do {

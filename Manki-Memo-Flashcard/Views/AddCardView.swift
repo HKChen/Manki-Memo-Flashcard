@@ -22,68 +22,114 @@ struct AddCardView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section(header: Text("日文")) {
-                    HStack {
-                        TextField("輸入日文", text: $japanese)
-                            .focused($isInputActive)
+            ZStack {
+            AppTheme.Colors.background.ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 20) {
 
-                        Button {
-                            speechService.speak(japanese)
-                        } label: {
-                            Image(systemName: speechService.isSpeaking ? "speaker.wave.3.fill" : "speaker.wave.2.fill")
-                                .foregroundColor(.blue)
-                        }
-                        .disabled(japanese.isEmpty)
-                    }
-                }
-
-
-
-                Section(header: Text("翻譯")) {
-                    TextField("輸入中文翻譯", text: $translation)
-                        .focused($isInputActive)
-                }
-
-                Section(header: Text("分類")) {
-                    Button {
-                        showingCategorySheet = true
-                    } label: {
-                        HStack {
-                            Text("選擇分類")
-                            Spacer()
-                            if selectedCategoryIDs.isEmpty {
-                                Text("無")
-                                    .foregroundColor(.secondary)
-                            } else {
-                                Text("\(selectedCategoryIDs.count) 個分類")
-                                    .foregroundColor(.blue)
+                        
+                        // Japanese
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("日文")
+                                .font(.caption)
+                                .foregroundColor(AppTheme.Colors.secondaryText)
+                                .padding(.leading, 4)
+                            
+                            MujiCard(padding: 0) {
+                                HStack {
+                                    TextField("輸入日文", text: $japanese)
+                                        .focused($isInputActive)
+                                        .padding()
+                                    
+                                    Button {
+                                        speechService.speak(japanese)
+                                    } label: {
+                                        Image(systemName: speechService.isSpeaking ? "speaker.wave.3.fill" : "speaker.wave.2.fill")
+                                            .foregroundColor(AppTheme.Colors.accent)
+                                            .padding()
+                                    }
+                                    .disabled(japanese.isEmpty)
+                                }
                             }
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.gray)
-                                .imageScale(.small)
                         }
-                    }
-                }
+                        .padding(.horizontal)
 
-                Section(header: Text("備註")) {
-                    TextEditor(text: $notes)
-                        .focused($isInputActive)
-                        .frame(minHeight: 100)
-                }
+                        // Translation
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("翻譯")
+                                .font(.caption)
+                                .foregroundColor(AppTheme.Colors.secondaryText)
+                                .padding(.leading, 4)
+                            
+                            MujiCard(padding: 0) {
+                                TextField("輸入中文翻譯", text: $translation)
+                                    .focused($isInputActive)
+                                    .padding()
+                            }
+                        }
+                        .padding(.horizontal)
 
-                Section {
-                    Button {
-                        saveCard()
-                    } label: {
-                        HStack {
-                            Spacer()
+                        // Category
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("分類")
+                                .font(.caption)
+                                .foregroundColor(AppTheme.Colors.secondaryText)
+                                .padding(.leading, 4)
+                            
+                            MujiCard(padding: 0) {
+                                Button {
+                                    showingCategorySheet = true
+                                } label: {
+                                    HStack {
+                                        Text("選擇分類")
+                                            .foregroundColor(AppTheme.Colors.primaryText)
+                                        Spacer()
+                                        if selectedCategoryIDs.isEmpty {
+                                            Text("無")
+                                                .foregroundColor(AppTheme.Colors.secondaryText)
+                                        } else {
+                                            Text("\(selectedCategoryIDs.count) 個分類")
+                                                .foregroundColor(AppTheme.Colors.accent)
+                                        }
+                                        Image(systemName: "chevron.right")
+                                            .foregroundColor(.gray)
+                                            .imageScale(.small)
+                                    }
+                                    .padding()
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+
+                        // Notes
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("備註")
+                                .font(.caption)
+                                .foregroundColor(AppTheme.Colors.secondaryText)
+                                .padding(.leading, 4)
+                            
+                            MujiCard(padding: 0) {
+                                TextEditor(text: $notes)
+                                    .focused($isInputActive)
+                                    .frame(minHeight: 100)
+                                    .padding(4) // TextEditor has some internal padding
+                            }
+                        }
+                        .padding(.horizontal)
+
+                        // Save Button
+                        Button {
+                            saveCard()
+                        } label: {
                             Text("儲存字卡")
-                                .fontWeight(.semibold)
-                            Spacer()
                         }
+                        .buttonStyle(MujiButtonStyle(isPrimary: true))
+                        .disabled(japanese.isEmpty)
+                        .padding(.horizontal)
+                        .padding(.top, 20)
                     }
-                    .disabled(japanese.isEmpty)
+                    .padding(.vertical)
                 }
             }
             .navigationTitle("新增字卡")
@@ -92,6 +138,7 @@ struct AddCardView: View {
                     Button("返回") {
                         tabSelection = 0
                     }
+                    .tint(AppTheme.Colors.accent)
                 }
             }
             .alert("儲存成功", isPresented: $showingSaveAlert) {

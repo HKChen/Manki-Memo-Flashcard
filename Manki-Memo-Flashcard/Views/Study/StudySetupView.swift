@@ -24,64 +24,108 @@ struct StudySetupView: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    Text("選擇要練習的分類，這些分類中的字卡將會隨機出現。")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                }
+            ZStack {
+                AppTheme.Colors.background.ignoresSafeArea()
                 
-                Section(header: Text("分類選擇")) {
-                    if store.categories.isEmpty {
-                        Text("尚無分類")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(store.categories) { category in
-                            HStack {
-                                Circle()
-                                    .fill(category.color)
-                                    .frame(width: 12, height: 12)
-                                
-                                Toggle(category.name, isOn: Binding(
-                                    get: { selectedCategories.contains(category.id) },
-                                    set: { isSelected in
-                                        if isSelected {
-                                            selectedCategories.insert(category.id)
-                                        } else {
-                                            selectedCategories.remove(category.id)
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Description
+                        Text("選擇要練習的分類，這些分類中的字卡將會隨機出現。")
+                            .font(.subheadline)
+                            .foregroundStyle(AppTheme.Colors.secondaryText)
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                        
+                        // Category Selection
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("分類選擇")
+                                .font(.headline)
+                                .foregroundColor(AppTheme.Colors.primaryText)
+                                .padding(.horizontal)
+                            
+                            MujiCard(padding: 0) {
+                                VStack(spacing: 0) {
+                                    if store.categories.isEmpty {
+                                        Text("尚無分類")
+                                            .foregroundStyle(AppTheme.Colors.secondaryText)
+                                            .padding()
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    } else {
+                                        ForEach(Array(store.categories.enumerated()), id: \.element.id) { index, category in
+                                            Toggle(isOn: Binding(
+                                                get: { selectedCategories.contains(category.id) },
+                                                set: { isSelected in
+                                                    if isSelected {
+                                                        selectedCategories.insert(category.id)
+                                                    } else {
+                                                        selectedCategories.remove(category.id)
+                                                    }
+                                                }
+                                            )) {
+                                                HStack {
+                                                    Circle()
+                                                        .fill(category.color)
+                                                        .frame(width: 12, height: 12)
+                                                    Text(category.name)
+                                                        .foregroundColor(AppTheme.Colors.primaryText)
+                                                }
+                                            }
+                                            .padding()
+                                            .tint(AppTheme.Colors.accent)
+                                            
+                                            if index < store.categories.count - 1 || true { // Divider for all categories followed by uncategorized toggle
+                                                Divider().padding(.leading)
+                                            }
                                         }
                                     }
-                                ))
+                                    
+                                    if !store.categories.isEmpty {
+                                        // No divider needed here if we put it above
+                                    }
+                                    
+                                    Toggle("未分類字卡", isOn: $includeUncategorized)
+                                        .padding()
+                                        .tint(AppTheme.Colors.accent)
+                                }
                             }
                         }
-                    }
-                    
-                    Toggle("未分類字卡", isOn: $includeUncategorized)
-                }
+                        .padding(.horizontal)
 
-                Section(header: Text("抽卡設定")) {
-                    Toggle("設定抽卡數量", isOn: $isLimitEnabled)
-                    
-                    if isLimitEnabled {
-                        Stepper("數量: \(cardLimit)", value: $cardLimit, in: 5...100, step: 5)
-                    }
-                }
-                
-                Section {
-                    Button {
-                        startSession()
-                    } label: {
-                        HStack {
-                            Spacer()
-                            Text("開始抽卡")
+                        // Draw Settings
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("抽卡設定")
                                 .font(.headline)
-                                .bold()
-                            Spacer()
+                                .foregroundColor(AppTheme.Colors.primaryText)
+                                .padding(.horizontal)
+                            
+                            MujiCard(padding: 0) {
+                                VStack(spacing: 0) {
+                                    Toggle("設定抽卡數量", isOn: $isLimitEnabled)
+                                        .padding()
+                                        .tint(AppTheme.Colors.accent)
+                                    
+                                    if isLimitEnabled {
+                                        Divider().padding(.leading)
+                                        Stepper("數量: \(cardLimit)", value: $cardLimit, in: 5...100, step: 5)
+                                            .padding()
+                                    }
+                                }
+                            }
                         }
+                        .padding(.horizontal)
+                        
+                        // Start Button
+                        Button {
+                            startSession()
+                        } label: {
+                            Text("開始抽卡")
+                        }
+                        .buttonStyle(MujiButtonStyle(isPrimary: true))
+                        .disabled(selectedCategories.isEmpty && !includeUncategorized)
+                        .padding(.horizontal)
+                        .padding(.top, 16)
                     }
-                    .disabled(selectedCategories.isEmpty && !includeUncategorized)
+                    .padding(.vertical)
                 }
             }
             .navigationTitle("抽卡設定")

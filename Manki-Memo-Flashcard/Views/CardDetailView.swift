@@ -22,106 +22,148 @@ struct CardDetailView: View {
     @State private var showingCategorySheet: Bool = false
 
     var body: some View {
-        Form {
-            Section(header: Text("日文")) {
-                if isEditing {
-                    TextField("日文", text: $editedJapanese)
-                } else {
-                    HStack {
-                        Text(card.japanese)
-                            .font(.title2)
-                        Spacer()
-                        speakButton(text: card.japanese)
-                    }
-                }
-            }
-
-            Section(header: Text("分類")) {
-                if isEditing {
-                    Button {
-                        showingCategorySheet = true
-                    } label: {
-                        HStack {
-                            Text("選擇分類")
-                            Spacer()
-                            if editedCategoryIDs.isEmpty {
-                                Text("無")
-                                    .foregroundColor(.secondary)
+        ZStack {
+            AppTheme.Colors.background.ignoresSafeArea()
+            
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Japanese Section
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("日文")
+                            .font(.headline)
+                            .foregroundColor(AppTheme.Colors.primaryText)
+                            .padding(.horizontal)
+                        
+                        MujiCard(padding: 0) {
+                            if isEditing {
+                                TextField("日文", text: $editedJapanese)
+                                    .padding()
                             } else {
-                                Text("\(editedCategoryIDs.count) 個分類")
-                                    .foregroundColor(.blue)
+                                HStack {
+                                    Text(card.japanese)
+                                        .font(.title2)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(AppTheme.Colors.primaryText)
+                                    Spacer()
+                                    speakButton(text: card.japanese)
+                                }
+                                .padding()
                             }
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.gray)
-                                .imageScale(.small)
                         }
                     }
-                } else {
-                    let categories = cardStore.categories(for: card)
-                    if categories.isEmpty {
-                        Text("無分類")
-                            .foregroundColor(.secondary)
-                    } else {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack {
-                                ForEach(categories) { category in
-                                    Text(category.name)
-                                        .font(.caption)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(category.color.opacity(0.2))
-                                        .foregroundColor(category.color)
-                                        .cornerRadius(8)
+                    .padding(.horizontal)
+                    
+                    // Translation Section
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("翻譯")
+                            .font(.headline)
+                            .foregroundColor(AppTheme.Colors.primaryText)
+                            .padding(.horizontal)
+                        
+                        MujiCard(padding: 0) {
+                            if isEditing {
+                                TextField("翻譯", text: $editedTranslation)
+                                    .padding()
+                            } else {
+                                Text(card.translation)
+                                    .foregroundColor(AppTheme.Colors.primaryText)
+                                    .padding()
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+
+                    // Category Section
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("分類")
+                            .font(.headline)
+                            .foregroundColor(AppTheme.Colors.primaryText)
+                            .padding(.horizontal)
+                        
+                        MujiCard(padding: 0) {
+                            if isEditing {
+                                Button {
+                                    showingCategorySheet = true
+                                } label: {
+                                    HStack {
+                                        Text("選擇分類")
+                                            .foregroundColor(AppTheme.Colors.primaryText)
+                                        Spacer()
+                                        if editedCategoryIDs.isEmpty {
+                                            Text("無")
+                                                .foregroundColor(AppTheme.Colors.secondaryText)
+                                        } else {
+                                            Text("\(editedCategoryIDs.count) 個分類")
+                                                .foregroundColor(AppTheme.Colors.accent)
+                                        }
+                                        Image(systemName: "chevron.right")
+                                            .foregroundColor(.gray)
+                                            .imageScale(.small)
+                                    }
+                                    .padding()
+                                }
+                            } else {
+                                let categories = cardStore.categories(for: card)
+                                if categories.isEmpty {
+                                    Text("無分類")
+                                        .foregroundColor(AppTheme.Colors.secondaryText)
+                                        .padding()
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                } else {
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack {
+                                            ForEach(categories) { category in
+                                                Text(category.name)
+                                                    .font(.caption)
+                                                    .padding(.horizontal, 8)
+                                                    .padding(.vertical, 4)
+                                                    .background(category.color.opacity(0.1))
+                                                    .foregroundColor(category.color)
+                                                    .cornerRadius(4)
+                                            }
+                                        }
+                                        .padding()
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            }
+                    .padding(.horizontal)
 
-
-
-            Section(header: Text("翻譯 TODO")) {
-//                if isEditing {
-//                    TextField("翻譯", text: $editedTranslation)
-//                } else {
-//                    Text(card.translation)
-//                }
-            }
-
-            Section(header: Text("備註")) {
-                if isEditing {
-                    TextEditor(text: $editedNotes)
-                        .frame(minHeight: 100)
-                } else {
-                    Text(card.notes.isEmpty ? "-" : card.notes)
-                        .foregroundColor(card.notes.isEmpty ? .secondary : .primary)
-                }
-            }
-
-            if !isEditing {
-                Section(header: Text("發音選項")) {
-                    ForEach(SpeechRate.allCases, id: \.self) { rate in
-                        Button {
-                            speechService.speak(card.japanese, rate: rate)
-                        } label: {
-                            HStack {
-                                Image(systemName: "speaker.wave.2.fill")
-                                Text(rate.displayName)
-                                Spacer()
-                                if speechService.isSpeaking {
-                                    ProgressView()
-                                }
+                    // Notes Section
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("備註")
+                            .font(.headline)
+                            .foregroundColor(AppTheme.Colors.primaryText)
+                            .padding(.horizontal)
+                        
+                        MujiCard(padding: 0) {
+                            if isEditing {
+                                TextEditor(text: $editedNotes)
+                                    .frame(minHeight: 100)
+                                    .padding(4)
+                            } else {
+                                Text(card.notes.isEmpty ? "-" : card.notes)
+                                    .foregroundColor(card.notes.isEmpty ? AppTheme.Colors.secondaryText : AppTheme.Colors.primaryText)
+                                    .padding()
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
                     }
-                }
+                    .padding(.horizontal)
 
-                Section {
-                    Text("建立時間：\(card.createdAt.formatted(date: .abbreviated, time: .shortened))")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    if !isEditing {
+                        // Metadata
+                         VStack(alignment: .leading, spacing: 8) {
+                            Text("建立時間：\(card.createdAt.formatted(date: .abbreviated, time: .shortened))")
+                                .font(.caption)
+                                .foregroundColor(AppTheme.Colors.secondaryText)
+                                .padding(.horizontal)
+                         }
+                    }
                 }
+                .padding(.vertical)
             }
         }
         .navigationTitle(isEditing ? "編輯字卡" : "字卡詳情")
@@ -135,6 +177,7 @@ struct CardDetailView: View {
                         startEditing()
                     }
                 }
+                .tint(AppTheme.Colors.accent)
                 .disabled(isEditing && editedJapanese.isEmpty)
             }
 
@@ -143,6 +186,7 @@ struct CardDetailView: View {
                     Button("取消") {
                         isEditing = false
                     }
+                    .tint(AppTheme.Colors.accent)
                 }
             }
         }

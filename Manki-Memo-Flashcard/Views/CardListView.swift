@@ -36,12 +36,21 @@ struct CardListView: View {
                 } else {
                     List {
                         ForEach(filteredCards) { card in
-                            NavigationLink(destination: CardDetailView(card: card)) {
+                            ZStack {
                                 CardRowView(card: card)
+                                NavigationLink(destination: CardDetailView(card: card)) {
+                                    EmptyView()
+                                }
+                                .opacity(0)
                             }
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                         }
                         .onDelete(perform: cardStore.deleteCards)
                     }
+                    .listStyle(.plain)
+                    .background(AppTheme.Colors.background)
                 }
             }
             .navigationTitle("字卡列表")
